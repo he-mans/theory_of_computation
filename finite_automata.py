@@ -114,6 +114,7 @@ class FiniteAutomata:
 
     def accept_input(self):
         self.evaluation_session.input_accepted = True
+        return None
 
     @property
     def input_accepted(self):
@@ -145,10 +146,7 @@ class FiniteAutomata:
         try:
             current_input_char: str = input_string[current_input_index]
         except IndexError:
-            if current_state in self.final_states:
-                self.accept_input()
-            else:
-                return
+            return self.accept_input() if current_state in self.final_states else None
 
         if current_state is DeadState:
             return
@@ -176,4 +174,4 @@ if __name__ == "__main__":
     # vertix3.add_edge(vertix3, ['1'])
     vertix3.add_edge(vertix3, ['2'])
     # vertix4.add_edge(vertix4, ['1'])
-    automata.evaluate_input('2')
+    automata.evaluate_input('22')
