@@ -2,20 +2,22 @@ from __future__ import annotations
 from typing import List, Dict, Optional
 
 
-class InitialStateError(Exception):
-    pass
+class NoInitialStateError(Exception):
+    def __init__(self, *args, **kwargs):
+        message = 'Initial state already exist'
+        super().__init__(message)
 
 
-class FinalStateError(Exception):
-    pass
+class NoFinalStatesError(Exception):
+    def __init__(self, *args, **kwargs):
+        message = 'No final states were found'
+        super().__init__(message)
 
 
-class NoFinalStatesError(FinalStateError):
-    pass
-
-
-class NoInitialStateError(InitialStateError):
-    pass
+class NoInitialStateError(Exception):
+    def __init__(self, *args, **kwargs):
+        message = 'No initial state was found'
+        super().__init__(message)
 
 
 class NullMove:
@@ -90,9 +92,7 @@ class FiniteAutomata:
 
     def add_state(self, name: str, is_initial: bool = False, is_final: bool = False):
         if self.initial_state is not None and is_initial:
-            raise InitialStateError(
-                "Initial state already exist"
-            )
+            raise NoInitialStateError
 
         vertix: State = State(name)
         self.vertices[name] = vertix
@@ -122,10 +122,10 @@ class FiniteAutomata:
 
     def evaluate_input(self, input_string: int):
         if self.initial_state is None:
-            raise NoInitialStateError("No initial state was found")
+            raise NoInitialStateError
 
         if self.final_states == []:
-            raise NoFinalStatesError('No final states were found')
+            raise NoFinalStatesError
 
         self.start_evaluation_session()
         self.evaluate_state(input_string, 0, self.initial_state)
@@ -138,7 +138,7 @@ class FiniteAutomata:
         self.end_evaluations_session()
 
     def evaluate_state(self, input_string: str, current_input_index: int, current_state: State):
-        if self.input_accepted:
+        if self.input_accepted or current_state is DeadState:
             return
 
         current_input_char = None
@@ -148,16 +148,16 @@ class FiniteAutomata:
         except IndexError:
             return self.accept_input() if current_state in self.final_states else None
 
-        if current_state is DeadState:
-            return
-
         for edge in current_state.edges:
             for move in edge.valid_moves:
-                if move == current_input_char or move == NullMove:
-                    next_vertix: State = edge.end_state
+                if move is NullMove or move == current_input_char:
                     next_input_index = current_input_index if move is NullMove else current_input_index + 1
+                    next_state: State = edge.end_state
                     self.evaluate_state(
-                        input_string, next_input_index, next_vertix)
+                        input_string,
+                        next_input_index,
+                        next_state
+                    )
 
         return
 
