@@ -57,10 +57,10 @@ class Edge:
         self.name: str = name or f'Edge from {start_state.name} to {end_state.name}'
 
     def __str__(self):
-        return f'State {self.name}'
+        return self.name
 
     def __repr__(self):
-        return f'State {self.name}'
+        return self.name
 
 
 class State:
