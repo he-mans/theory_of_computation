@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import List, Dict, Optional
 
 
-class NoInitialStateError(Exception):
+class MultipleInitialStateError(Exception):
     def __init__(self, *args, **kwargs):
         message = 'Initial state already exist'
         super().__init__(message)
@@ -92,7 +92,7 @@ class FiniteAutomata:
 
     def add_state(self, name: str, is_initial: bool = False, is_final: bool = False):
         if self.initial_state is not None and is_initial:
-            raise NoInitialStateError
+            raise MultipleInitialStateError
 
         vertix: State = State(name)
         self.vertices[name] = vertix
