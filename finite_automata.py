@@ -47,12 +47,13 @@ class DeadState:
 
 
 class EvaluationSession:
-    def __init__(self):
+    def __init__(self, input_string: str):
         self.input_accepted: bool = False
+        self.input_string: str = input_string
 
 
 class Edge:
-    def __init__(self, start_state: 'Vertix', end_state: 'Vertix', valid_moves: List[str], name=None):
+    def __init__(self, start_state: 'State', end_state: 'State', valid_moves: List[str], name=None):
         self.valid_moves: List[str] = valid_moves
         self.end_state: 'State' = end_state
         self.start_state: 'State' = start_state
@@ -94,19 +95,19 @@ class FiniteAutomata:
         if self.initial_state is not None and is_initial:
             raise MultipleInitialStateError
 
-        vertix: State = State(name)
-        self.vertices[name] = vertix
-        self.initial_state = vertix if is_initial else self.initial_state
+        state: State = State(name)
+        self.vertices[name] = state
+        self.initial_state = state if is_initial else self.initial_state
         if is_final:
-            self.final_states.append(vertix)
-        return vertix
+            self.final_states.append(state)
+        return state
 
-    def get_vertix_by_name(self, name: str):
-        return self.vertices.get(name, 'Vertix does not exist')
+    def get_state_by_name(self, name: str):
+        return self.vertices.get(name, 'State does not exist')
 
-    def start_evaluation_session(self):
+    def start_evaluation_session(self, input_string: str):
         self.is_evaluating: bool = True
-        self.evaluation_session = EvaluationSession()
+        self.evaluation_session = EvaluationSession(input_string)
 
     def end_evaluations_session(self):
         self.is_evaluating: bool = False
@@ -120,58 +121,95 @@ class FiniteAutomata:
     def input_accepted(self):
         return self.evaluation_session.input_accepted
 
-    def evaluate_input(self, input_string: int):
+    @property
+    def input_string(self):
+        return self.evaluation_session.input_string
+
+    def evaluate_input(self, input_string: str):
         if self.initial_state is None:
             raise NoInitialStateError
 
         if self.final_states == []:
             raise NoFinalStatesError
 
-        self.start_evaluation_session()
-        self.evaluate_state(input_string, 0, self.initial_state)
+        self.start_evaluation_session(input_string)
+        self.evaluate_state(0, self.initial_state)
 
-        if self.evaluation_session.input_accepted:
+        if self.input_accepted:
             print("String accepted")
         else:
             print("String rejected")
 
         self.end_evaluations_session()
 
-    def evaluate_state(self, input_string: str, current_input_index: int, current_state: State):
+    def evaluate_state(self, current_input_index: int, current_state: State):
         if self.input_accepted or current_state is DeadState:
             return
 
         current_input_char = None
+        valid_move = False
 
         try:
-            current_input_char: str = input_string[current_input_index]
+            current_input_char: str = self.input_string[current_input_index]
         except IndexError:
             return self.accept_input() if current_state in self.final_states else None
 
         for edge in current_state.edges:
             for move in edge.valid_moves:
                 if move is NullMove or move == current_input_char:
+                    valid_move = True
                     next_input_index = current_input_index if move is NullMove else current_input_index + 1
                     next_state: State = edge.end_state
                     self.evaluate_state(
-                        input_string,
                         next_input_index,
                         next_state
                     )
+        if not valid_move:
+            self.evaluate_state(
+                current_input_index+1,
+                DeadState
+            )
 
         return
 
 
 if __name__ == "__main__":
-    automata = FiniteAutomata()
-    vertix1 = automata.add_state('A', is_initial=True)
-    # vertix2 = graph.add_vertix('B')
-    vertix3 = automata.add_state('C', is_final=True)
-    # vertix4 = graph.add_vertix('D', is_final=True)
-    vertix1.add_edge(DeadState, ['1'])
-    # vertix2.add_edge(DeadState, ['1'])
-    vertix1.add_edge(vertix3, [NullMove])
-    # vertix3.add_edge(vertix3, ['1'])
-    vertix3.add_edge(vertix3, ['2'])
-    # vertix4.add_edge(vertix4, ['1'])
-    automata.evaluate_input('22')
+    # automata1 = FiniteAutomata()
+    # state11 = automata1.add_state(name='A', is_initial=True)
+    # state12 = automata1.add_state(name='B', is_final=True)
+    # state11.add_edge(state12, ['a'])
+    # automata1.evaluate_input('a')
+
+    # automata for a*b
+    # automata = FiniteAutomata()
+    # state1 = automata.add_state(name='A', is_initial=True)
+    # state2 = automata.add_state(name='B', is_final=True)
+    # state1.add_edge(state1, ['a'])
+    # state1.add_edge(state2, ['b'])
+    # automata.evaluate_input('aaab')
+
+    # automata for abb
+    # automata = FiniteAutomata()
+    # state1 = automata.add_state(name='A', is_initial=True)
+    # state2 = automata.add_state(name='B')
+    # state3 = automata.add_state(name='D',)
+    # state4 = automata.add_state(name='C', is_final=True)
+    # state1.add_edge(state2, ['a'])
+    # state2.add_edge(state3, ['b'])
+    # state3.add_edge(state4, ['b'])
+    # automata.evaluate_input('abb')
+
+    # nfa that accepts 00 and 11 at the end of a string containing 0, 1 in it
+    nfa = FiniteAutomata()
+    state1 = nfa.add_state(name='A', is_initial=True)
+    state2 = nfa.add_state(name='A')
+    state3 = nfa.add_state(name='A')
+    state4 = nfa.add_state(name='A', is_final=True)
+
+    state1.add_edge(state1, valid_moves=['0', '1'])
+    state1.add_edge(state2, valid_moves=['0'])
+    state1.add_edge(state3, valid_moves=['1'])
+    state2.add_edge(state4, valid_moves=['0'])
+    state3.add_edge(state4, valid_moves=['1'])
+
+    nfa.evaluate_input('01010100')
