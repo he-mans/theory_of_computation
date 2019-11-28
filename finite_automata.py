@@ -200,16 +200,29 @@ if __name__ == "__main__":
     # automata.evaluate_input('abb')
 
     # nfa that accepts 00 and 11 at the end of a string containing 0, 1 in it
-    nfa = FiniteAutomata()
-    state1 = nfa.add_state(name='A', is_initial=True)
-    state2 = nfa.add_state(name='A')
-    state3 = nfa.add_state(name='A')
-    state4 = nfa.add_state(name='A', is_final=True)
+    # nfa = FiniteAutomata()
+    # state1 = nfa.add_state(name='A', is_initial=True)
+    # state2 = nfa.add_state(name='B')
+    # state3 = nfa.add_state(name='C')
+    # state4 = nfa.add_state(name='D', is_final=True)
 
-    state1.add_edge(state1, valid_moves=['0', '1'])
-    state1.add_edge(state2, valid_moves=['0'])
-    state1.add_edge(state3, valid_moves=['1'])
-    state2.add_edge(state4, valid_moves=['0'])
-    state3.add_edge(state4, valid_moves=['1'])
+    # state1.add_edge(state1, valid_moves=['0', '1'])
+    # state1.add_edge(state2, valid_moves=['0'])
+    # state1.add_edge(state3, valid_moves=['1'])
+    # state2.add_edge(state4, valid_moves=['0'])
+    # state3.add_edge(state4, valid_moves=['1'])
+    # nfa.evaluate_input('01010100')
 
-    nfa.evaluate_input('01010100')
+    # nfa-epsilon in which any number of zeors are followed by
+    # any number of 1 followed by any number of 2
+    nfa_epsilon = FiniteAutomata()
+    state1 = nfa_epsilon.add_state(name='A', is_initial=True)
+    state2 = nfa_epsilon.add_state(name='B')
+    state3 = nfa_epsilon.add_state(name='C', is_final=True)
+
+    state1.add_edge(state1, valid_moves=['0'])
+    state1.add_edge(state2, valid_moves=[NullMove])
+    state2.add_edge(state2, valid_moves=['1'])
+    state2.add_edge(state3, valid_moves=[NullMove])
+    state3.add_edge(state3, valid_moves=['2'])
+    nfa_epsilon.evaluate_input('000001112222')
